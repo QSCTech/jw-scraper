@@ -12,18 +12,18 @@ import (
 	"strings"
 )
 
-type HttpService struct {
+type httpServiceImpl struct {
 	baseUrl             *url.URL
 	noRedirectionClient *http.Client
 }
 
-func NewHttpService(rawBaseUrl string) *HttpService {
+func NewHttpService(rawBaseUrl string) HttpService {
 	baseUrl, err := url.Parse(rawBaseUrl)
 	if err != nil {
 		panic("invalid base URL: " + err.Error())
 	}
 
-	return &HttpService{
+	return &httpServiceImpl{
 		baseUrl: baseUrl,
 		noRedirectionClient: &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -33,7 +33,7 @@ func NewHttpService(rawBaseUrl string) *HttpService {
 	}
 }
 
-func (service *HttpService) NewJwCookie(value string) *http.Cookie {
+func (service *httpServiceImpl) NewJwCookie(value string) *http.Cookie {
 	return &http.Cookie{
 		Name:  "ASP.NET_SessionId",
 		Value: value,
@@ -44,7 +44,7 @@ func IsJwCookie(cookie *http.Cookie) bool {
 	return cookie.Name == "ASP.NET_SessionId"
 }
 
-func (service *HttpService) GetLoginPage() (page string, err error) {
+func (service *httpServiceImpl) GetLoginPage() (page string, err error) {
 	resp, err := http.Get(service.baseUrl.String())
 	if err != nil {
 		return
@@ -66,7 +66,7 @@ func (service *HttpService) GetLoginPage() (page string, err error) {
 @Error: if err is kind of grpc.Status with code codes.InvalidArgument, username or password is invalid,
 		otherwise, a http error occurred
 */
-func (service *HttpService) Login(username, password, viewState string) (jwbCookie string, err error) {
+func (service *httpServiceImpl) Login(username, password, viewState string) (jwbCookie string, err error) {
 	targetUrl := *service.baseUrl
 	targetUrl.Path = path.Join(targetUrl.Path, "default2.aspx")
 	req, err := http.NewRequest(
@@ -111,7 +111,7 @@ func (service *HttpService) Login(username, password, viewState string) (jwbCook
 	return
 }
 
-func (service *HttpService) GetDefaultCourses(stuId, jwbCookie string) (page string, status int, err error) {
+func (service *httpServiceImpl) GetDefaultCourses(stuId, jwbCookie string) (page string, status int, err error) {
 	targetUrl := *service.baseUrl
 	targetUrl.Path = path.Join(targetUrl.Path, "xskbcx.aspx")
 	finalQuery := targetUrl.Query()
@@ -125,7 +125,7 @@ func (service *HttpService) GetDefaultCourses(stuId, jwbCookie string) (page str
 	return service.sendRequest(req)
 }
 
-func (service *HttpService) GetCourses(stuId, jwbCookie, schoolYear, semester, viewState, eventTarget string) (page string, status int, err error) {
+func (service *httpServiceImpl) GetCourses(stuId, jwbCookie, schoolYear, semester, viewState, eventTarget string) (page string, status int, err error) {
 	xqdEncoded, _, err := transform.String(simplifiedchinese.GBK.NewEncoder(), semester)
 	if err != nil {
 		panic(err)
@@ -159,7 +159,7 @@ func (service *HttpService) GetCourses(stuId, jwbCookie, schoolYear, semester, v
 	return service.sendRequest(req)
 }
 
-func (service *HttpService) GetDefaultExams(stuId, jwbCookie string) (page string, status int, err error) {
+func (service *httpServiceImpl) GetDefaultExams(stuId, jwbCookie string) (page string, status int, err error) {
 	targetUrl := *service.baseUrl
 	targetUrl.Path = path.Join(targetUrl.Path, "xskscx.aspx")
 	finalQuery := targetUrl.Query()
@@ -174,7 +174,7 @@ func (service *HttpService) GetDefaultExams(stuId, jwbCookie string) (page strin
 	return service.sendRequest(req)
 }
 
-func (service *HttpService) GetExams(stuId, jwbCookie, schoolYear, semester, viewState, eventTarget string) (page string, status int, err error) {
+func (service *httpServiceImpl) GetExams(stuId, jwbCookie, schoolYear, semester, viewState, eventTarget string) (page string, status int, err error) {
 	targetUrl := *service.baseUrl
 	targetUrl.Path = path.Join(targetUrl.Path, "xskscx.aspx")
 	finalQuery := targetUrl.Query()
@@ -206,19 +206,19 @@ func (service *HttpService) GetExams(stuId, jwbCookie, schoolYear, semester, vie
 	return service.sendRequest(req)
 }
 
-func (service *HttpService) GetScores() (page string, status int, err error) {
+func (service *httpServiceImpl) GetScores() (page string, status int, err error) {
 	panic("not implemented")
 }
 
-func (service *HttpService) GetMajorScores() (page string, status int, err error) {
+func (service *httpServiceImpl) GetMajorScores() (page string, status int, err error) {
 	panic("not implemented")
 }
 
-func (service *HttpService) GetTotalCredit() (page string, status int, err error) {
+func (service *httpServiceImpl) GetTotalCredit() (page string, status int, err error) {
 	panic("not implemented")
 }
 
-func (service *HttpService) sendRequest(req *http.Request) (page string, status int, err error) {
+func (service *httpServiceImpl) sendRequest(req *http.Request) (page string, status int, err error) {
 	resp, err := service.noRedirectionClient.Do(req)
 	if err != nil {
 		return
