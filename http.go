@@ -1,7 +1,6 @@
 package jw_scraper
 
 import (
-	"fmt"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"google.golang.org/grpc/codes"
@@ -112,7 +111,7 @@ func (service *HttpService) Login(username, password, viewState string) (jwbCook
 	return
 }
 
-func (service *HttpService) GetDefaultCourses(stuId, jwbCookie string) (page string, err error) {
+func (service *HttpService) GetDefaultCourses(stuId, jwbCookie string) (page string, status int, err error) {
 	targetUrl := *service.baseUrl
 	targetUrl.Path = path.Join(targetUrl.Path, "xskbcx.aspx")
 	finalQuery := targetUrl.Query()
@@ -126,7 +125,7 @@ func (service *HttpService) GetDefaultCourses(stuId, jwbCookie string) (page str
 	return service.sendRequest(req)
 }
 
-func (service *HttpService) GetCourses(stuId, jwbCookie, schoolYear, semester, viewState, eventTarget string) (page string, err error) {
+func (service *HttpService) GetCourses(stuId, jwbCookie, schoolYear, semester, viewState, eventTarget string) (page string, status int, err error) {
 	xqdEncoded, _, err := transform.String(simplifiedchinese.GBK.NewEncoder(), semester)
 	if err != nil {
 		panic(err)
@@ -160,7 +159,7 @@ func (service *HttpService) GetCourses(stuId, jwbCookie, schoolYear, semester, v
 	return service.sendRequest(req)
 }
 
-func (service *HttpService) GetDefaultExams(stuId, jwbCookie string) (page string, err error) {
+func (service *HttpService) GetDefaultExams(stuId, jwbCookie string) (page string, status int, err error) {
 	targetUrl := *service.baseUrl
 	targetUrl.Path = path.Join(targetUrl.Path, "xskscx.aspx")
 	finalQuery := targetUrl.Query()
@@ -175,7 +174,7 @@ func (service *HttpService) GetDefaultExams(stuId, jwbCookie string) (page strin
 	return service.sendRequest(req)
 }
 
-func (service *HttpService) GetExams(stuId, jwbCookie, schoolYear, semester, viewState, eventTarget string) (page string, err error) {
+func (service *HttpService) GetExams(stuId, jwbCookie, schoolYear, semester, viewState, eventTarget string) (page string, status int, err error) {
 	targetUrl := *service.baseUrl
 	targetUrl.Path = path.Join(targetUrl.Path, "xskscx.aspx")
 	finalQuery := targetUrl.Query()
@@ -207,19 +206,19 @@ func (service *HttpService) GetExams(stuId, jwbCookie, schoolYear, semester, vie
 	return service.sendRequest(req)
 }
 
-func (service *HttpService) GetScores() (page string, err error) {
+func (service *HttpService) GetScores() (page string, status int, err error) {
 	panic("not implemented")
 }
 
-func (service *HttpService) GetMajorScores() (page string, err error) {
+func (service *HttpService) GetMajorScores() (page string, status int, err error) {
 	panic("not implemented")
 }
 
-func (service *HttpService) GetTotalCredit() (page string, err error) {
+func (service *HttpService) GetTotalCredit() (page string, status int, err error) {
 	panic("not implemented")
 }
 
-func (service *HttpService) sendRequest(req *http.Request) (page string, err error) {
+func (service *HttpService) sendRequest(req *http.Request) (page string, status int, err error) {
 	resp, err := service.noRedirectionClient.Do(req)
 	if err != nil {
 		return
@@ -237,9 +236,6 @@ func (service *HttpService) sendRequest(req *http.Request) (page string, err err
 		return
 	}
 	page = string(data)
-	if resp.StatusCode == http.StatusFound {
-		err = status.Error(codes.Unauthenticated, fmt.Sprintf("invalid cookie: %#v", req.Cookies()[0]))
-		return
-	}
+	status = resp.StatusCode
 	return
 }

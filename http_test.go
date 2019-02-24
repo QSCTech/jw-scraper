@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"net/http"
 	"testing"
 )
 
@@ -49,10 +50,10 @@ func TestHttpService_GetDefaultCourses(t *testing.T) {
 		viper.GetString("TEST_PASSWORD"),
 		"dDwxNTc0MzA5MTU4Ozs+b5wKASjiu+fSjITNzcKuKXEUyXg=")
 	assert.Nil(t, err)
-	page, err := server.GetDefaultCourses(viper.GetString("TEST_STU_ID"), jwbCookie)
+	page, statusCode, err := server.GetDefaultCourses(viper.GetString("TEST_STU_ID"), jwbCookie)
 	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, statusCode)
 	assert.NotZero(t, page)
-	println(page)
 }
 
 func TestHttpService_GetCourses(t *testing.T) {
@@ -62,7 +63,7 @@ func TestHttpService_GetCourses(t *testing.T) {
 		viper.GetString("TEST_PASSWORD"),
 		"dDwxNTc0MzA5MTU4Ozs+b5wKASjiu+fSjITNzcKuKXEUyXg=")
 	assert.Nil(t, err)
-	page, err := server.GetCourses(
+	page, statusCode, err := server.GetCourses(
 		viper.GetString("TEST_STU_ID"),
 		jwbCookie,
 		"2018-2019",
@@ -71,5 +72,6 @@ func TestHttpService_GetCourses(t *testing.T) {
 		"xqd",
 	)
 	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, statusCode)
 	assert.NotZero(t, page)
 }
