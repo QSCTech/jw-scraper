@@ -1,6 +1,7 @@
 package jw_scraper
 
 import (
+	"fmt"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"google.golang.org/grpc/codes"
@@ -31,6 +32,17 @@ func NewHttpService(rawBaseUrl string) *HttpService {
 			},
 		},
 	}
+}
+
+func (service *HttpService) NewJwCookie(value string) *http.Cookie {
+	return &http.Cookie{
+		Name:  "ASP.NET_SessionId",
+		Value: value,
+	}
+}
+
+func IsJwCookie(cookie *http.Cookie) bool {
+	return cookie.Name == "ASP.NET_SessionId"
 }
 
 func (service *HttpService) GetLoginPage() (page string, err error) {
@@ -89,7 +101,7 @@ func (service *HttpService) Login(username, password, viewState string) (jwbCook
 
 	if resp.StatusCode == http.StatusFound {
 		for _, cookie := range resp.Cookies() {
-			if cookie.Name == "ASP.NET_SessionId" {
+			if IsJwCookie(cookie) {
 				jwbCookie = cookie.Value
 				return
 			}
@@ -110,12 +122,7 @@ func (service *HttpService) GetDefaultCourses(stuId, jwbCookie string) (page str
 	if err != nil {
 		return
 	}
-
-	req.AddCookie(&http.Cookie{
-		Name:  "ASP.NET_SessionId",
-		Value: jwbCookie,
-	})
-
+	req.AddCookie(service.NewJwCookie(jwbCookie))
 	return service.sendRequest(req)
 }
 
@@ -149,10 +156,7 @@ func (service *HttpService) GetCourses(stuId, jwbCookie, schoolYear, semester, v
 		return
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded") // It's necessary
-	req.AddCookie(&http.Cookie{
-		Name:  "ASP.NET_SessionId",
-		Value: jwbCookie,
-	})
+	req.AddCookie(service.NewJwCookie(jwbCookie))
 	return service.sendRequest(req)
 }
 
@@ -167,11 +171,7 @@ func (service *HttpService) GetDefaultExams(stuId, jwbCookie string) (page strin
 	if err != nil {
 		return
 	}
-	req.AddCookie(&http.Cookie{
-		Name:  "ASP.NET_SessionId",
-		Value: jwbCookie,
-	})
-
+	req.AddCookie(service.NewJwCookie(jwbCookie))
 	return service.sendRequest(req)
 }
 
@@ -203,10 +203,7 @@ func (service *HttpService) GetExams(stuId, jwbCookie, schoolYear, semester, vie
 		return
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded") // It's necessary
-	req.AddCookie(&http.Cookie{
-		Name:  "ASP.NET_SessionId",
-		Value: jwbCookie,
-	})
+	req.AddCookie(service.NewJwCookie(jwbCookie))
 	return service.sendRequest(req)
 }
 
@@ -228,11 +225,6 @@ func (service *HttpService) sendRequest(req *http.Request) (page string, err err
 		return
 	}
 
-	if resp.StatusCode == http.StatusFound {
-		err = status.Error(codes.Unauthenticated, "invalid cookie")
-		return
-	}
-
 	defer func() {
 		if closeBodyErr := resp.Body.Close(); err == nil && closeBodyErr != nil {
 			err = closeBodyErr
@@ -245,5 +237,9 @@ func (service *HttpService) sendRequest(req *http.Request) (page string, err err
 		return
 	}
 	page = string(data)
+	if resp.StatusCode == http.StatusFound {
+		err = status.Error(codes.Unauthenticated, fmt.Sprintf("invalid cookie: %#v", req.Cookies()[0]))
+		return
+	}
 	return
 }

@@ -52,6 +52,7 @@ func TestHttpService_GetDefaultCourses(t *testing.T) {
 	page, err := server.GetDefaultCourses(viper.GetString("TEST_STU_ID"), jwbCookie)
 	assert.Nil(t, err)
 	assert.NotZero(t, page)
+	println(page)
 }
 
 func TestHttpService_GetCourses(t *testing.T) {
