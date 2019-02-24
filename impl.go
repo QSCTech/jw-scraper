@@ -40,6 +40,10 @@ func (service *httpServiceImpl) NewJwCookie(value string) *http.Cookie {
 	}
 }
 
+func NewHttpError(err error) error {
+	return status.Error(codes.Internal, "http request fail: "+err.Error())
+}
+
 func IsJwCookie(cookie *http.Cookie) bool {
 	return cookie.Name == "ASP.NET_SessionId"
 }
@@ -47,15 +51,17 @@ func IsJwCookie(cookie *http.Cookie) bool {
 func (service *httpServiceImpl) GetLoginPage() (page string, err error) {
 	resp, err := http.Get(service.baseUrl.String())
 	if err != nil {
+		err = NewHttpError(err)
 		return
 	}
 	defer func() {
 		if closeBodyErr := resp.Body.Close(); closeBodyErr != nil {
-			err = closeBodyErr
+			err = NewHttpError(closeBodyErr)
 		}
 	}()
 	data, err := ioutil.ReadAll(transform.NewReader(resp.Body, simplifiedchinese.GBK.NewDecoder())) // decoding from gbk is necessary
 	if err != nil {
+		err = NewHttpError(err)
 		return
 	}
 	page = string(data)
@@ -85,16 +91,19 @@ func (service *httpServiceImpl) Login(username, password, viewState string) (jwb
 		),
 	)
 	if err != nil {
+		err = NewHttpError(err)
 		return
 	}
 
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := service.noRedirectionClient.Do(req)
 	if err != nil {
+		err = NewHttpError(err)
 		return
 	}
 
 	if err = resp.Body.Close(); err != nil {
+		err = NewHttpError(err)
 		return
 	}
 
@@ -221,18 +230,20 @@ func (service *httpServiceImpl) GetTotalCredit() (page string, status int, err e
 func (service *httpServiceImpl) sendRequest(req *http.Request) (page string, status int, err error) {
 	resp, err := service.noRedirectionClient.Do(req)
 	if err != nil {
+		err = NewHttpError(err)
 		return
 	}
 
 	defer func() {
 		if closeBodyErr := resp.Body.Close(); err == nil && closeBodyErr != nil {
-			err = closeBodyErr
+			err = NewHttpError(closeBodyErr)
 			return
 		}
 	}()
 
 	data, err := ioutil.ReadAll(transform.NewReader(resp.Body, simplifiedchinese.GBK.NewDecoder()))
 	if err != nil {
+		err = NewHttpError(err)
 		return
 	}
 	page = string(data)
