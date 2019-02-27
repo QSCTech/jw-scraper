@@ -15,7 +15,7 @@ type HttpService interface {
 
 	GetScores() (page string, status int, err error)
 
-	GetMajorScores() (page string, status int, err error)
+	GetMajorScores(stuId, jwbCookie string) (page string, status int, err error)
 
 	GetTotalCredit() (page string, status int, err error)
 }
