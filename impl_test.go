@@ -88,3 +88,16 @@ func TestHttpServiceImpl_GetMajorScores(t *testing.T) {
 	assert.Equal(t, http.StatusOK, statusCode)
 	assert.NotZero(t, page)
 }
+
+func TestHttpServiceImpl_GetScoresBase(t *testing.T) {
+	server := jw_scraper.NewHttpService("https://jw.zjuqsc.com")
+	jwbCookie, err := server.Login(
+		viper.GetString("TEST_STU_ID"),
+		viper.GetString("TEST_PASSWORD"),
+		"dDwxNTc0MzA5MTU4Ozs+b5wKASjiu+fSjITNzcKuKXEUyXg=")
+	assert.Nil(t, err)
+	page, statusCode, err := server.GetScoresBase(viper.GetString("TEST_STU_ID"), jwbCookie)
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, statusCode)
+	assert.NotZero(t, page)
+}

@@ -215,7 +215,22 @@ func (service *httpServiceImpl) GetExams(stuId, jwbCookie, schoolYear, semester,
 	return service.sendRequest(req)
 }
 
-func (service *httpServiceImpl) GetScores() (page string, status int, err error) {
+func (service *httpServiceImpl) GetScoresBase(stuId, jwbCookie string) (page string, status int, err error) {
+	targetUrl := *service.baseUrl
+	targetUrl.Path = path.Join(targetUrl.Path, "xscj.aspx")
+	finalQuery := targetUrl.Query()
+	finalQuery.Add("xh", stuId)
+	targetUrl.RawQuery = finalQuery.Encode()
+
+	req, err := http.NewRequest(http.MethodGet, targetUrl.String(), nil)
+	if err != nil {
+		return
+	}
+	req.AddCookie(service.NewJwCookie(jwbCookie))
+	return service.sendRequest(req)
+}
+
+func (service *httpServiceImpl) GetScores(stuId, jwbCookie, schoolYear, viewState string) (page string, status int, err error) {
 	panic("not implemented")
 }
 
@@ -233,7 +248,7 @@ func (service *httpServiceImpl) GetMajorScores(stuId, jwbCookie string) (page st
 	return service.sendRequest(req)
 }
 
-func (service *httpServiceImpl) GetTotalCredit() (page string, status int, err error) {
+func (service *httpServiceImpl) GetTotalCredit(stuId, jwbCookie string) (page string, status int, err error) {
 	panic("not implemented")
 }
 
