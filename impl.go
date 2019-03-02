@@ -273,7 +273,17 @@ func (service *httpServiceImpl) GetMajorScores(stuId, jwbCookie string) (page st
 }
 
 func (service *httpServiceImpl) GetTotalCredit(stuId, jwbCookie string) (page string, status int, err error) {
-	panic("not implemented")
+	targetUrl := *service.baseUrl
+	targetUrl.Path = path.Join(targetUrl.Path, "xs_txsqddy.aspx")
+	finalQuery := targetUrl.Query()
+	finalQuery.Add("xh", stuId)
+	targetUrl.RawQuery = finalQuery.Encode()
+	req, err := http.NewRequest(http.MethodGet, targetUrl.String(), nil)
+	if err != nil {
+		return
+	}
+	req.AddCookie(service.NewJwCookie(jwbCookie))
+	return service.sendRequest(req)
 }
 
 func (service *httpServiceImpl) sendRequest(req *http.Request) (page string, status int, err error) {
