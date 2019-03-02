@@ -231,7 +231,31 @@ func (service *httpServiceImpl) GetScoresBase(stuId, jwbCookie string) (page str
 }
 
 func (service *httpServiceImpl) GetScores(stuId, jwbCookie, schoolYear, viewState string) (page string, status int, err error) {
-	panic("not implemented")
+	targetUrl := *service.baseUrl
+	targetUrl.Path = path.Join(targetUrl.Path, "xscj.aspx")
+	finalQuery := targetUrl.Query()
+	finalQuery.Add("xh", stuId)
+	targetUrl.RawQuery = finalQuery.Encode()
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		targetUrl.String(),
+		strings.NewReader(
+			url.Values{
+				"__VIEWSTATE": {viewState},
+				"ddlXN":       {schoolYear},
+				"ddlXQ":       {},
+				"txtQSCJ":     {},
+				"txtZZCJ":     {},
+				"Button5":     {"%B0%B4%D1%A7%C4%EA%B2%E9%D1%AF"}, // decoding in gbk: "按学年查询"
+			}.Encode(),
+		))
+	if err != nil {
+		return
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded") // It's necessary
+	req.AddCookie(service.NewJwCookie(jwbCookie))
+	return service.sendRequest(req)
 }
 
 func (service *httpServiceImpl) GetMajorScores(stuId, jwbCookie string) (page string, status int, err error) {
