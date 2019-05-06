@@ -49,7 +49,9 @@ func IsJwCookie(cookie *http.Cookie) bool {
 }
 
 func (service *httpServiceImpl) GetLoginPage() (page string, err error) {
-	resp, err := http.Get(service.baseUrl.String())
+	targetUrl := *service.baseUrl
+	targetUrl.Path = path.Join(targetUrl.Path, "default2.aspx")
+	resp, err := http.Get(targetUrl.String())
 	if err != nil {
 		err = NewHttpError(err)
 		return
