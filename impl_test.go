@@ -2,40 +2,45 @@ package jw_scraper_test
 
 import (
 	"github.com/QSCTech/jw-scraper"
-	"github.com/spf13/viper"
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"log"
 	"net/http"
+	"os"
 	"testing"
 )
 
 func init() {
-	viper.AutomaticEnv()
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 }
 
 func TestHttpService_GetLoginPage(t *testing.T) {
-	server := jw_scraper.NewHttpService("https://jw.zjuqsc.com")
+	server := jw_scraper.NewHttpService(os.Getenv("JW_BASE_URL"))
 	page, err := server.GetLoginPage()
 	assert.Nil(t, err)
 	assert.NotZero(t, page)
 }
 
 func TestHttpService_Login(t *testing.T) {
-	server := jw_scraper.NewHttpService("https://jw.zjuqsc.com")
+	server := jw_scraper.NewHttpService(os.Getenv("JW_BASE_URL"))
 	jwbCookie, err := server.Login(
-		viper.GetString("TEST_STU_ID"),
-		viper.GetString("TEST_PASSWORD"),
+		os.Getenv("TEST_STU_ID"),
+		os.Getenv("TEST_PASSWORD"),
 		"dDwxNTc0MzA5MTU4Ozs+b5wKASjiu+fSjITNzcKuKXEUyXg=")
 	assert.Nil(t, err)
 	assert.NotZero(t, jwbCookie)
 }
 
 func TestHttpService_Login_Fail(t *testing.T) {
-	server := jw_scraper.NewHttpService("https://jw.zjuqsc.com")
+	server := jw_scraper.NewHttpService(os.Getenv("JW_BASE_URL"))
 	_, err := server.Login(
-		viper.GetString("TEST_STU_ID"),
-		viper.GetString("TEST_WRONG_PASSWORD"),
+		os.Getenv("TEST_STU_ID"),
+		os.Getenv("TEST_WRONG_PASSWORD"),
 		"dDwxNTc0MzA5MTU4Ozs+b5wKASjiu+fSjITNzcKuKXEUyXg=")
 	assert.NotNil(t, err)
 	stat, ok := status.FromError(err)
@@ -44,27 +49,27 @@ func TestHttpService_Login_Fail(t *testing.T) {
 }
 
 func TestHttpService_GetDefaultCourses(t *testing.T) {
-	server := jw_scraper.NewHttpService("https://jw.zjuqsc.com")
+	server := jw_scraper.NewHttpService(os.Getenv("JW_BASE_URL"))
 	jwbCookie, err := server.Login(
-		viper.GetString("TEST_STU_ID"),
-		viper.GetString("TEST_PASSWORD"),
+		os.Getenv("TEST_STU_ID"),
+		os.Getenv("TEST_PASSWORD"),
 		"dDwxNTc0MzA5MTU4Ozs+b5wKASjiu+fSjITNzcKuKXEUyXg=")
 	assert.Nil(t, err)
-	page, statusCode, err := server.GetDefaultCourses(viper.GetString("TEST_STU_ID"), jwbCookie)
+	page, statusCode, err := server.GetDefaultCourses(os.Getenv("TEST_STU_ID"), jwbCookie)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, statusCode)
 	assert.NotZero(t, page)
 }
 
 func TestHttpService_GetCourses(t *testing.T) {
-	server := jw_scraper.NewHttpService("https://jw.zjuqsc.com")
+	server := jw_scraper.NewHttpService(os.Getenv("JW_BASE_URL"))
 	jwbCookie, err := server.Login(
-		viper.GetString("TEST_STU_ID"),
-		viper.GetString("TEST_PASSWORD"),
+		os.Getenv("TEST_STU_ID"),
+		os.Getenv("TEST_PASSWORD"),
 		"dDwxNTc0MzA5MTU4Ozs+b5wKASjiu+fSjITNzcKuKXEUyXg=")
 	assert.Nil(t, err)
 	page, statusCode, err := server.GetCourses(
-		viper.GetString("TEST_STU_ID"),
+		os.Getenv("TEST_STU_ID"),
 		jwbCookie,
 		"2018-2019",
 		"1|秋、冬",
@@ -77,40 +82,40 @@ func TestHttpService_GetCourses(t *testing.T) {
 }
 
 func TestHttpServiceImpl_GetMajorScores(t *testing.T) {
-	server := jw_scraper.NewHttpService("https://jw.zjuqsc.com")
+	server := jw_scraper.NewHttpService(os.Getenv("JW_BASE_URL"))
 	jwbCookie, err := server.Login(
-		viper.GetString("TEST_STU_ID"),
-		viper.GetString("TEST_PASSWORD"),
+		os.Getenv("TEST_STU_ID"),
+		os.Getenv("TEST_PASSWORD"),
 		"dDwxNTc0MzA5MTU4Ozs+b5wKASjiu+fSjITNzcKuKXEUyXg=")
 	assert.Nil(t, err)
-	page, statusCode, err := server.GetMajorScores(viper.GetString("TEST_STU_ID"), jwbCookie)
+	page, statusCode, err := server.GetMajorScores(os.Getenv("TEST_STU_ID"), jwbCookie)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, statusCode)
 	assert.NotZero(t, page)
 }
 
 func TestHttpServiceImpl_GetScoresBase(t *testing.T) {
-	server := jw_scraper.NewHttpService("https://jw.zjuqsc.com")
+	server := jw_scraper.NewHttpService(os.Getenv("JW_BASE_URL"))
 	jwbCookie, err := server.Login(
-		viper.GetString("TEST_STU_ID"),
-		viper.GetString("TEST_PASSWORD"),
+		os.Getenv("TEST_STU_ID"),
+		os.Getenv("TEST_PASSWORD"),
 		"dDwxNTc0MzA5MTU4Ozs+b5wKASjiu+fSjITNzcKuKXEUyXg=")
 	assert.Nil(t, err)
-	page, statusCode, err := server.GetScoresBase(viper.GetString("TEST_STU_ID"), jwbCookie)
+	page, statusCode, err := server.GetScoresBase(os.Getenv("TEST_STU_ID"), jwbCookie)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, statusCode)
 	assert.NotZero(t, page)
 }
 
 func TestHttpServiceImpl_GetScores(t *testing.T) {
-	server := jw_scraper.NewHttpService("https://jw.zjuqsc.com")
+	server := jw_scraper.NewHttpService(os.Getenv("JW_BASE_URL"))
 	jwbCookie, err := server.Login(
-		viper.GetString("TEST_STU_ID"),
-		viper.GetString("TEST_PASSWORD"),
+		os.Getenv("TEST_STU_ID"),
+		os.Getenv("TEST_PASSWORD"),
 		"dDwxNTc0MzA5MTU4Ozs+b5wKASjiu+fSjITNzcKuKXEUyXg=")
 	assert.Nil(t, err)
 	page, statusCode, err := server.GetScores(
-		viper.GetString("TEST_STU_ID"),
+		os.Getenv("TEST_STU_ID"),
 		jwbCookie,
 		"2018-2019",
 		"dDw0NzAzMzE4ODg7dDw7bDxpPDE+Oz47bDx0PDtsPGk8Mj47aTw1PjtpPDI1PjtpPDI3PjtpPDI5PjtpPDMxPjtpPDMzPjtpPDM1PjtpPDM3PjtpPDM5PjtpPDQxPjtpPDQzPjtpPDQ1PjtpPDQ3PjtpPDQ4Pjs+O2w8dDx0PDt0PGk8MjA+O0A8XGU7MjAwMS0yMDAyOzIwMDItMjAwMzsyMDAzLTIwMDQ7MjAwNC0yMDA1OzIwMDUtMjAwNjsyMDA2LTIwMDc7MjAwNy0yMDA4OzIwMDgtMjAwOTsyMDA5LTIwMTA7MjAxMC0yMDExOzIwMTEtMjAxMjsyMDEyLTIwMTM7MjAxMy0yMDE0OzIwMTQtMjAxNTsyMDE1LTIwMTY7MjAxNi0yMDE3OzIwMTctMjAxODsyMDE4LTIwMTk7MjAxOS0yMDIwOz47QDxcZTsyMDAxLTIwMDI7MjAwMi0yMDAzOzIwMDMtMjAwNDsyMDA0LTIwMDU7MjAwNS0yMDA2OzIwMDYtMjAwNzsyMDA3LTIwMDg7MjAwOC0yMDA5OzIwMDktMjAxMDsyMDEwLTIwMTE7MjAxMS0yMDEyOzIwMTItMjAxMzsyMDEzLTIwMTQ7MjAxNC0yMDE1OzIwMTUtMjAxNjsyMDE2LTIwMTc7MjAxNy0yMDE4OzIwMTgtMjAxOTsyMDE5LTIwMjA7Pj47Pjs7Pjt0PHQ8cDxwPGw8RGF0YVRleHRGaWVsZDtEYXRhVmFsdWVGaWVsZDs+O2w8eHhxO3hxMTs+Pjs+O3Q8aTw4PjtAPFxlO+aYpTvlpI8755+tO+enizvlhqw755+tO+aakTs+O0A8XGU7MnzmmKU7MnzlpI87Mnznn607MXznp4s7MXzlhqw7MXznn607MXzmmpE7Pj47Pjs7Pjt0PHA8O3A8bDxvbmNsaWNrOz47bDx3aW5kb3cucHJpbnQoKVw7Oz4+Pjs7Pjt0PHA8O3A8bDxvbmNsaWNrOz47bDx3aW5kb3cuY2xvc2UoKVw7Oz4+Pjs7Pjt0PHA8cDxsPFRleHQ7PjtsPOi/h+eoi+aIkOe7qTs+Pjs+Ozs+O3Q8cDxwPGw8VGV4dDs+O2w85a2m5Y+377yaMzE2MDEwMTAzNDs+Pjs+Ozs+O3Q8cDxwPGw8VGV4dDs+O2w85aeT5ZCN77ya5p2O5pmo5pumOz4+Oz47Oz47dDxwPHA8bDxUZXh0Oz47bDzlrabpmaLvvJrmtbfmtIvlrabpmaI7Pj47Pjs7Pjt0PHA8cDxsPFRleHQ7PjtsPOexuyjkuJPkuJop77ya5rW35rSL5bel56iL5LiO5oqA5pyvOz4+Oz47Oz47dDxwPHA8bDxUZXh0Oz47bDzooYzmlL/nj63vvJrmtbfmtIvlt6XnqIvkuI7mioDmnK8xNjAyOz4+Oz47Oz47dDxAMDxwPHA8bDxWaXNpYmxlO1BhZ2VDb3VudDtfIUl0ZW1Db3VudDtfIURhdGFTb3VyY2VJdGVtQ291bnQ7RGF0YUtleXM7PjtsPG88Zj47aTwxPjtpPDA+O2k8MD47bDw+Oz4+Oz47Ozs7Ozs7Ozs7Pjs7Pjt0PEAwPHA8cDxsPFZpc2libGU7UGFnZUNvdW50O18hSXRlbUNvdW50O18hRGF0YVNvdXJjZUl0ZW1Db3VudDtEYXRhS2V5czs+O2w8bzx0PjtpPDE+O2k8MD47aTwwPjtsPD47Pj47Pjs7Ozs7Ozs7O0AwPEAwPHA8bDxIZWFkZXJUZXh0O0RhdGFGaWVsZDtTb3J0RXhwcmVzc2lvbjtSZWFkT25seTs+O2w86YCJ6K++6K++5Y+3O+mAieivvuivvuWPtzvpgInor77or77lj7c7bzxmPjs+Pjs7Ozs+O0AwPHA8bDxIZWFkZXJUZXh0O0RhdGFGaWVsZDtTb3J0RXhwcmVzc2lvbjtSZWFkT25seTs+O2w86K++56iL5ZCN56ewO+ivvueoi+WQjeensDvor77nqIvlkI3np7A7bzxmPjs+Pjs7Ozs+O0AwPHA8bDxIZWFkZXJUZXh0O0RhdGFGaWVsZDtTb3J0RXhwcmVzc2lvbjtSZWFkT25seTs+O2w85oiQ57upO+aIkOe7qTvmiJDnu6k7bzxmPjs+Pjs7Ozs+O0AwPHA8bDxIZWFkZXJUZXh0O0RhdGFGaWVsZDtTb3J0RXhwcmVzc2lvbjtSZWFkT25seTs+O2w85a2m5YiGO+WtpuWIhjvlrabliIY7bzxmPjs+Pjs7Ozs+O0AwPHA8bDxIZWFkZXJUZXh0O0RhdGFGaWVsZDtTb3J0RXhwcmVzc2lvbjtSZWFkT25seTs+O2w857up54K5O+e7qeeCuTvnu6nngrk7bzxmPjs+Pjs7Ozs+O0AwPHA8bDxIZWFkZXJUZXh0O0RhdGFGaWVsZDtTb3J0RXhwcmVzc2lvbjtSZWFkT25seTs+O2w86K+m57uG5L+h5oGvO+ivpue7huS/oeaBrzvor6bnu4bkv6Hmga87bzxmPjs+Pjs7Ozs+Oz47Pjs7Pjt0PEAwPHA8cDxsPFZpc2libGU7PjtsPG88dD47Pj47Pjs7Ozs7Ozs7Ozs+Ozs+O3Q8cDxwPGw8VGV4dDs+O2w8WkpEWDs+Pjs+Ozs+O3Q8cDxwPGw8SW1hZ2VVcmw7PjtsPC4vdHBtbC85NzA1MjcuanBnOz4+Oz47Oz47Pj47Pj47PgH4IFyjHVBGUcQRhLvgSseALZ98",
@@ -121,13 +126,13 @@ func TestHttpServiceImpl_GetScores(t *testing.T) {
 }
 
 func TestHttpServiceImpl_GetTotalCredit(t *testing.T) {
-	server := jw_scraper.NewHttpService("https://jw.zjuqsc.com")
+	server := jw_scraper.NewHttpService(os.Getenv("JW_BASE_URL"))
 	jwbCookie, err := server.Login(
-		viper.GetString("TEST_STU_ID"),
-		viper.GetString("TEST_PASSWORD"),
+		os.Getenv("TEST_STU_ID"),
+		os.Getenv("TEST_PASSWORD"),
 		"dDwxNTc0MzA5MTU4Ozs+b5wKASjiu+fSjITNzcKuKXEUyXg=")
 	assert.Nil(t, err)
-	page, statusCode, err := server.GetTotalCredit(viper.GetString("TEST_STU_ID"), jwbCookie)
+	page, statusCode, err := server.GetTotalCredit(os.Getenv("TEST_STU_ID"), jwbCookie)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, statusCode)
 	assert.NotZero(t, page)
